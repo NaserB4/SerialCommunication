@@ -20,6 +20,8 @@ namespace SerialCommunication
         }
 
         private void Form1_Load(object sender, EventArgs e)
+
+        
         {
             try
             {
@@ -248,6 +250,7 @@ namespace SerialCommunication
         {
             timerOefening3.Enabled = tabControl.SelectedIndex == 3;
             timerOefening4.Enabled = tabControl.SelectedIndex == 4;
+            timerOefening5.Enabled = (tabControl.SelectedTab == tabPageOefening5);
         }
 
         private void timerOefening3_Tick(object sender, EventArgs e)
@@ -308,6 +311,57 @@ namespace SerialCommunication
                 }
             }
             catch (Exception exception) 
+            {
+                labelStatus.Text = "Error: " + exception.Message;
+                serialPortArduino.Close();
+                radioButtonVerbonden.Checked = false;
+                buttonConnect.Text = "Connect";
+            }
+        }
+
+        private void timerOefening5_Tick(object sender, EventArgs e)
+        {
+
+            double rico = 0.039100684;
+            int offset = 5;
+            double rico1 = 0.488758553;
+            try
+            {
+                if (serialPortArduino.IsOpen)
+                {
+                    serialPortArduino.ReadExisting();
+                    string commando = "get a0";
+                    serialPortArduino.WriteLine(commando);
+                    string antwoord = serialPortArduino.ReadLine();
+                    antwoord = antwoord.TrimEnd();
+                    antwoord = antwoord.Substring(4);
+
+                    double value = double.Parse(antwoord);
+
+                    double temperatuur = (rico * value) + offset;
+
+                    labelGewensteTemp.Text = temperatuur.ToString("0.0°C");
+
+                    serialPortArduino.ReadExisting();
+                    string commando1 = "get a1";
+                    serialPortArduino.WriteLine(commando1);
+                    string antwoord1 = serialPortArduino.ReadLine();
+                    antwoord1 = antwoord1.TrimEnd();
+                    antwoord1 = antwoord1.Substring(4);
+
+                    double value1 = double.Parse(antwoord1);
+
+                    double temperatuur1 = (rico1 * value1);
+
+                    labelHuidigeTemp.Text = temperatuur1.ToString("0.0°C");
+                    string commando2;
+                    if (temperatuur1 < temperatuur) commando2 = "set d2 high";
+                    else commando2 = "set d2 low";
+                    serialPortArduino.WriteLine(commando2);
+                }
+            }
+
+            catch (Exception exception)
             {
                 labelStatus.Text = "Error: " + exception.Message;
                 serialPortArduino.Close();
